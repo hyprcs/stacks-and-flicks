@@ -139,8 +139,9 @@
         importFiles(e.dataTransfer.files, root);
       });
 
-      // Served over http(s)? Offer the export that's sitting in the project folder, if it parses.
-      if (location.protocol.startsWith('http')) {
+      // Running locally? Offer the export that's sitting in the project folder, if it parses.
+      // (A hosted copy never has one: exports stay on your own computer.)
+      if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
         fetch(L.localFile, { cache: 'no-store' })
           .then((r) => (r.ok ? r.blob() : null))
           .then(async (blob) => {

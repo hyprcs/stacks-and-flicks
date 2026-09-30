@@ -1,8 +1,10 @@
 # Personal data: exports stay on this computer. The app never needs them in the repo.
+# (Anchored to the project root, so app code such as js/letterboxd.js is never caught.)
 *.csv
 *.zip
-goodreads_library_export*
-letterboxd*
+/goodreads_library_export*
+/letterboxd_export*
+/letterboxd-*/
 
 # Local tooling
 .claude/
