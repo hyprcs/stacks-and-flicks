@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stacks — Discovery Queue</title>
+  <meta name="description" content="Turn your Goodreads or Letterboxd export into a Steam-style discovery queue that learns your taste.">
+  <meta name="theme-color" content="#17110c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Picks Stacks or Flicks before first paint: colours, fonts, icons and title. -->
+  <script src="js/brand.js"></script>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar" id="topbar" hidden>
+    <a class="brand" href="#/queue">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name"></span>
+    </a>
+    <nav class="tabs" aria-label="Main">
+      <a href="#/queue" data-route="queue"><span class="long">Discovery&nbsp;</span>Queue</a>
+      <a href="#/wishlist" data-route="wishlist"><span class="lbl" id="wish-label">Want<span class="long">&nbsp;to Read</span></span> <span class="count" id="wish-count"></span></a>
+      <a href="#/profile" data-route="profile"><span class="long">Your&nbsp;</span>Taste</a>
+      <a href="#/how" data-route="how">How<span class="long">&nbsp;it works</span></a>
+    </nav>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div id="mode-host"></div>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+  <div id="toasts" aria-live="polite"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/csv.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/subjects.js"></script>
+  <script src="js/filmtags.js"></script>
+  <script src="js/openlibrary.js"></script>
+  <script src="js/zip.js"></script>
+  <script src="js/letterboxd.js"></script>
+  <script src="js/tmdb.js"></script>
+  <script src="js/domains/books.js"></script>
+  <script src="js/domains/films.js"></script>
+  <script src="js/domain.js"></script>
+  <script src="js/taste.js"></script>
+  <script src="js/recommender.js"></script>
+  <script src="js/twins.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/views/landing.js"></script>
+  <script src="js/views/analyze.js"></script>
+  <script src="js/views/calibrate.js"></script>
+  <script src="js/views/queue.js"></script>
+  <script src="js/views/wishlist.js"></script>
+  <script src="js/views/profile.js"></script>
+  <script src="js/views/how.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

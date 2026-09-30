@@ -1,0 +1,30 @@
+{
+  "id": "./?mode=films",
+  "name": "Flicks — Discovery Queue",
+  "short_name": "Flicks",
+  "description": "A Steam-style discovery queue for your Letterboxd diary.",
+  "start_url": "./?mode=films#/queue",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0d0c",
+  "theme_color": "#0b0d0c",
+  "icons": [
+    {
+      "src": "icons/flicks-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/flicks-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/flicks-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

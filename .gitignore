@@ -1,0 +1,12 @@
+# Personal data: exports stay on this computer. The app never needs them in the repo.
+*.csv
+*.zip
+goodreads_library_export*
+letterboxd*
+
+# Local tooling
+.claude/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
