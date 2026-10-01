@@ -261,6 +261,8 @@
     trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/>',
     keyboard: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>',
     layers: '<path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/>',
+    key: '<circle cx="8" cy="15.5" r="3.5"/><path d="M10.5 13L19 4.5M15.5 8l2.5 2.5M13 10.5l1.5 1.5"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   };
   const icon = (name, cls = '') =>
     raw(`<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"

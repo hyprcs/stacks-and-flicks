@@ -200,13 +200,13 @@
       const st = c.lastStats;
       const running = DQ.ai.isRunning();
       return html`<div class="pcard span-12 ai-card" id="ai">
-        <h2>${icon('spark')} AI assist · ${p.label} · <code>${c.model}</code></h2>
+        <h2>${icon('spark')} AI picks · ${p.name} · <span title="${c.model}">${DQ.ai.modelName(c.model)}</span></h2>
         <p class="sub">${
           running ? 'Asking for picks now…'
-          : c.lastRun ? `Last run ${ago(c.lastRun)}: ${st.suggested} suggested, ${st.found} found on ${W.source}, ${st.added} new in your queue${st.tokensIn ? ` (${Math.round(st.tokensIn / 1000)}k tokens in, ${Math.round((st.tokensOut || 0) / 1000)}k out${st.cost != null ? `, $${st.cost.toFixed(4)}` : ''})` : ''}.`
+          : c.lastRun ? `Last batch ${ago(c.lastRun)}: ${st.suggested} suggested, ${st.found} found on ${W.source}, ${st.added} new in your queue${st.cost != null ? ` (${DQ.ai.fmtCost(st.cost)})` : ''}.`
           : 'Set up. Get your first AI picks below.'
-        }${c.auto ? ' Refreshes automatically after a queue when picks run low.' : ''}</p>
-        ${c.lastError ? html`<p class="ai-error">${icon('warn')} ${c.lastError.message}</p>` : ''}
+        }${c.auto ? ' A new batch is fetched after a queue when picks run low.' : ''}</p>
+        ${c.lastError ? html`<p class="ai-error">${icon('warn')} <span>${c.lastError.message} <a href="#/connect">See how to fix it</a></span></p>` : ''}
         ${c.profile?.summary
           ? html`<div class="ai-profile">
               <h3>What ${c.profile.model} sees in your ${W.library}</h3>
@@ -216,8 +216,9 @@
           : ''}
         <div class="ai-actions">
           <button class="btn btn-primary" id="ai-run" ${running ? 'disabled' : ''}>${icon('spark')} ${running ? 'Working…' : 'Get new AI picks'}</button>
-          <button class="btn" id="ai-edit">${icon('sliders')} Settings</button>
+          <a class="btn" href="#/connect">${icon('layers')} Change model</a>
           <a class="btn btn-ghost" href="#/how">Compare models ${icon('next')}</a>
+          <button class="btn btn-ghost" id="ai-edit">${icon('sliders')} Advanced</button>
           <button class="btn btn-ghost btn-danger" id="ai-off">Turn off and forget key</button>
         </div>
       </div>`;
@@ -225,13 +226,12 @@
     if (!aiEditing) {
       return html`<div class="pcard span-12 ai-card ai-pitch" id="ai">
         <div>
-          <h2>${icon('spark')} AI assist <span class="pill">optional</span></h2>
-          <p class="sub" style="margin:0">${D.t.aiPitch} Works with Claude, OpenAI, Gemini, OpenRouter (hundreds of cheaper models) or a free local model.</p>
+          <h2>${icon('spark')} AI picks <span class="pill">optional</span></h2>
+          <p class="sub" style="margin:0">${D.t.aiPitch} Free to start, and the guide takes about two minutes.</p>
         </div>
         <div class="ai-actions">
-          ${DQ.ai.canConnect() ? html`<button class="btn btn-primary" id="ai-connect">${icon('spark')} Connect OpenRouter</button>` : ''}
-          <button class="btn ${DQ.ai.canConnect() ? '' : 'btn-primary'}" id="ai-setup">${DQ.ai.canConnect() ? 'Other providers' : 'Set up'}</button>
-          <a class="btn btn-ghost" href="#/how">Which model? ${icon('next')}</a>
+          <a class="btn btn-primary" href="#/connect">${icon('spark')} Set up AI picks</a>
+          <button class="btn btn-ghost" id="ai-setup">${icon('sliders')} Advanced</button>
         </div>
       </div>`;
     }
@@ -239,8 +239,8 @@
     const p = P[pid];
     const est = DQ.ai.estimateTokens();
     return html`<div class="pcard span-12 ai-card" id="ai">
-      <h2>${icon('spark')} AI assist</h2>
-      <p class="sub">Bring your own key. Calls go straight from this page to the provider you pick.</p>
+      <h2>${icon('spark')} AI picks · advanced settings</h2>
+      <p class="sub">Every setting by hand, for any service. New to this? <a href="#/connect">The step-by-step guide</a> is easier.</p>
       <form class="ai-form" id="ai-form" autocomplete="off">
         <label><span>Provider</span>
           <select name="provider">${Object.entries(P).map(([id, x]) => html`<option value="${id}" ${id === pid ? 'selected' : ''}>${x.label}</option>`)}</select>
@@ -298,11 +298,10 @@
     $('#ai-off', card)?.addEventListener('click', () => {
       DQ.ai.forget();
       DQ.app.invalidate();
-      toast('AI assist is off and the key is forgotten. Picks already in your queue stay.');
+      toast('AI picks are off and the key is forgotten. Picks already in your queue stay.');
       rerender();
     });
     $('#ai-run', card)?.addEventListener('click', () => DQ.ai.run().catch(() => {}));
-    $('#ai-connect', card)?.addEventListener('click', () => DQ.ai.connectOpenRouter());
 
     const form = $('#ai-form', card);
     if (!form) return;
@@ -649,6 +648,14 @@
     render(r) {
       tip = null;
       render(r);
+      // Arriving from the set-up guide with the form open: bring it into view once the router has settled.
+      if (aiEditing) requestAnimationFrame(() => $('#ai', r)?.scrollIntoView({ block: 'center' }));
+    },
+    /** Open the by-hand AI settings form (the set-up guide links here for unusual services). */
+    editAi() {
+      if (!DQ.app.ready()) return toast(`Advanced settings live on Your Taste, which opens once you've imported your ${W.service} export.`, { timeout: 6000 });
+      aiEditing = true;
+      DQ.app.go('profile');
     },
     destroy() {
       tip?.remove();

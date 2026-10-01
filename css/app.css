@@ -799,6 +799,134 @@ kbd {
 .how-privacy li { display: flex; gap: 8px; align-items: flex-start; }
 .how-privacy .icon { margin-top: 3px; }
 
+/* ---------- AI set-up guide (#/connect) ---------- */
+/* Written to be read, so the type is a touch larger and the measure narrower than the other pages. */
+.connect { max-width: 1040px; }
+.connect .how-intro { margin-bottom: 18px; }
+.connect .pcard h2 { display: flex; align-items: center; gap: 8px; }
+.connect .pcard h2 .icon { color: var(--plum); }
+.connect code { font-size: 0.9em; color: var(--text-bright); background: rgb(var(--rgb-tint) / 0.08); padding: 1px 6px; border-radius: 3px; overflow-wrap: anywhere; }
+.connect a .icon { width: 0.95em; height: 0.95em; }
+.linkish { padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.linkish:hover { color: var(--text-bright); }
+.cx-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 26px; }
+.cx-cta .faint { font-size: 13px; }
+.cx-fine { margin: 14px 0 0; font-size: 13px; color: var(--text-faint); line-height: 1.55; }
+
+.cx-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.cx-cards li { display: flex; gap: 12px; padding: 14px; border-radius: var(--radius); background: var(--panel-soft); border: 1px solid var(--line); }
+.cx-cards .icon { color: var(--plum); width: 20px; height: 20px; margin-top: 2px; }
+.cx-cards h3 { font-size: 16px; margin: 0 0 6px; }
+.cx-cards p { margin: 0; color: var(--text-dim); font-size: 13.5px; line-height: 1.55; }
+
+.guide-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.guide-steps li { display: flex; gap: 12px; align-items: flex-start; font-size: 14.5px; line-height: 1.55; color: var(--text); }
+.guide-steps li > div { padding-top: 3px; min-width: 0; }
+.guide-steps b { color: var(--text-bright); }
+.cx-words { margin: 0; display: grid; gap: 12px; }
+.cx-words dt { color: var(--text-bright); font-weight: 600; font-size: 14px; }
+.cx-words dd { margin: 2px 0 0; color: var(--text-dim); font-size: 13.5px; line-height: 1.55; }
+
+/* The box a key is pasted into. */
+.cx-key { display: grid; gap: 8px; padding: 14px 16px; border-radius: var(--radius); background: var(--panel-soft); border: 1px solid var(--line); }
+.cx-key label { font-size: 14px; font-weight: 600; color: var(--text); }
+.cx-key-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cx-key input:not([type="hidden"]), .cx-key select {
+  flex: 2; min-width: min(100%, 220px); padding: 10px 12px; border-radius: 3px; border: 1px solid var(--line-strong);
+  background: rgb(var(--rgb-wood-2) / 0.5); color: var(--text-bright); font: inherit; font-size: 14px;
+}
+.cx-key select { appearance: auto; }
+.cx-key input:focus, .cx-key select:focus { outline: none; border-color: var(--accent); }
+.cx-msg { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
+.cx-msg:empty { display: none; }
+.cx-msg.bad { color: var(--warn-fg); }
+
+/* One fold-out guide per service. */
+.guides { display: grid; gap: 8px; margin-top: 14px; }
+.guide { border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel-soft); }
+.guide[open] { border-color: var(--line-strong); }
+.guide > summary {
+  display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) auto auto; gap: 6px 16px; align-items: center;
+  padding: 14px 16px; cursor: pointer; list-style: none;
+}
+.guide > summary::-webkit-details-marker { display: none; }
+.guide > summary::after {
+  content: ""; width: 8px; height: 8px; margin: 0 4px; border-right: 2px solid var(--text-faint); border-bottom: 2px solid var(--text-faint);
+  transform: translateY(-2px) rotate(45deg); transition: transform 0.15s;
+}
+.guide[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+.guide-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 600 17px/1.25 var(--font-display); color: var(--text-bright); }
+.guide > summary:hover .guide-name { color: var(--accent); }
+.guide-pitch { color: var(--text-dim); font-size: 13.5px; line-height: 1.5; }
+.guide-money { color: var(--text); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.guide-body { display: grid; gap: 16px; padding: 16px 16px 18px; border-top: 1px solid var(--line); }
+.guide-body .cx-key { background: rgb(var(--rgb-wood-2) / 0.35); }
+.guide-options h4 { margin: 0 0 8px; font: 600 14px/1.3 var(--font-ui); color: var(--text); }
+.guide-options ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.guide-options li {
+  display: grid; grid-template-columns: minmax(180px, 1.1fr) minmax(0, 1.7fr) auto; gap: 4px 14px; align-items: center;
+  padding: 9px 12px; border-radius: var(--radius); border: 1px solid var(--line); font-size: 13px;
+}
+.guide-options li.start { background: var(--accent-soft); border-color: rgb(var(--rgb-brass) / 0.45); }
+.guide-options b { margin-right: 4px; color: var(--text-bright); font-size: 14px; }
+.guide-option-why { color: var(--text-dim); line-height: 1.45; }
+.guide-option-cost { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 8px; color: var(--text); }
+.guide-options .cx-fine { margin-top: 8px; }
+.cx-others { margin: 0 0 10px; }
+.guide-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13.5px; color: var(--text-dim); line-height: 1.55; }
+.guide-notes b { color: var(--text); }
+
+/* Model sizes: the bookseller / video-shop metaphor. Each size keeps one colour wherever it appears. */
+.lv-light { --lv: var(--text-dim); }
+.lv-solid { --lv: var(--accent); }
+.lv-deep { --lv: var(--plum); }
+.cx-lead { margin: 0 0 14px; font-size: 15px; line-height: 1.6; color: var(--text); max-width: 80ch; }
+.cx-lead b { color: var(--text-bright); }
+/* Each card is a subgrid of eight shared rows, so the same fact sits on the same line in all three. */
+.cx-levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cx-level { display: grid; grid-row: span 8; grid-template-rows: subgrid; row-gap: 8px; padding: 16px; border-radius: var(--radius); background: var(--panel-soft); border: 1px solid var(--line); border-top: 3px solid var(--lv); }
+.cx-level.current { background: var(--accent-soft); }
+.cx-level-kind { display: flex; align-items: center; gap: 8px; font: 600 11.5px/1.4 var(--font-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--lv); }
+.cx-level h3 { font-size: 19px; }
+.cx-level p { margin: 0; color: var(--text-dim); font-size: 13.5px; line-height: 1.55; }
+.cx-level dl { display: contents; }
+.cx-level dl > div:first-child { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cx-level dt { font-size: 11.5px; color: var(--text-faint); }
+.cx-level dd { margin: 1px 0 0; font-size: 13.5px; color: var(--text); }
+.cx-chip { font: 600 11.5px/1.5 var(--font-ui); padding: 1px 8px; border-radius: 10px; color: var(--lv); box-shadow: inset 0 0 0 1px currentColor; white-space: nowrap; }
+
+/* Connected: what's in use, anything that went wrong, and the models on offer. */
+.connect .cx-status h2 .icon { color: var(--green); }
+.cx-now { margin: 6px 0; font-size: 16px; color: var(--text); }
+.cx-now b { color: var(--text-bright); }
+.cx-status > .ai-actions { margin: 12px 0 4px; }
+.cx-problem { display: flex; gap: 10px; padding: 12px 14px; margin: 4px 0 12px; border-radius: var(--radius); background: rgb(var(--rgb-oxblood) / 0.25); border: 1px solid rgb(var(--rgb-brick) / 0.35); font-size: 14px; }
+.cx-problem > .icon { color: var(--red); margin-top: 2px; }
+.cx-problem p { margin: 0 0 8px; }
+.cx-problem .cx-detail { font-size: 12.5px; color: var(--text-faint); overflow-wrap: anywhere; }
+.cx-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.cx-model { display: grid; grid-template-rows: auto 1fr auto; gap: 8px; padding: 12px 14px; border-radius: var(--radius); background: var(--panel-soft); border: 1px solid var(--line); }
+.cx-model.current { background: var(--accent-soft); border-color: rgb(var(--rgb-brass) / 0.45); }
+.cx-model-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.cx-model-head b { color: var(--text-bright); font-size: 15px; }
+.cx-model p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.cx-model-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; font-size: 13px; color: var(--text); }
+
+.cx-faq details { border-top: 1px solid var(--line); }
+.cx-faq details:first-child { border-top: 0; }
+.cx-faq summary { padding: 12px 0; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text); }
+.cx-faq summary:hover { color: var(--text-bright); }
+.cx-faq p { margin: 0 0 14px; color: var(--text-dim); font-size: 14px; line-height: 1.6; max-width: 78ch; }
+@media (max-width: 860px) {
+  .cx-levels { grid-template-columns: 1fr; }
+  .guide > summary { grid-template-columns: minmax(0, 1fr) auto; }
+  .guide > summary > span { grid-column: 1; }
+  .guide > summary::after { grid-column: 2; grid-row: 1; }
+  .guide-options li { grid-template-columns: minmax(0, 1fr); }
+  .guide-option-cost { justify-content: flex-start; }
+  .cx-key-row .btn { flex: 1; }
+}
+
 /* ---------- responsive ---------- */
 /* Four tabs plus the Stacks | Flicks switch: drop the long words before they collide. */
 @media (max-width: 1060px) {
