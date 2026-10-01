@@ -31,8 +31,9 @@
     let name = routeName();
     const ready = app.ready();
     // Not ready: resume an import that was left half-way; otherwise the start page. #/import stays
-    // reachable either way (to change the TMDB key or drop a newer export).
-    if (!ready && !['analyze', 'how', 'import'].includes(name)) name = state.library.length ? 'analyze' : 'landing';
+    // reachable either way (to change the TMDB key or drop a newer export), and so are the two
+    // explainer pages: How it works and the AI set-up guide.
+    if (!ready && !['analyze', 'how', 'connect', 'import'].includes(name)) name = state.library.length ? 'analyze' : 'landing';
     else if (ready && (!name || name === 'landing')) name = 'queue';
     if (!DQ.views[name]) name = ready ? 'queue' : 'landing';
 
@@ -108,13 +109,20 @@
   window.addEventListener('hashchange', render);
   DQ.app = app;
 
-  // Back from OpenRouter's one-click connect (?code=…): finish it, then show the AI section.
+  // Back from OpenRouter's one-click connect (?code=…): finish it, then show the set-up page,
+  // which now says what was connected and what happens next.
   DQ.ai.completeOpenRouterAuth().then((r) => {
     if (!r) return;
     const { toast, html } = DQ.util;
-    if (!r.ok) return toast(html`<b>Couldn't connect OpenRouter.</b> ${r.message}`, { timeout: 9000 });
-    toast(html`<b>OpenRouter connected.</b> Using ${r.model}.${app.ready() ? ' Your first AI picks are on the way.' : ''}`, { timeout: 7000 });
-    app.go('how');
+    if (!r.ok) {
+      toast(html`<b>Couldn't connect OpenRouter.</b> ${r.message}`, { timeout: 9000 });
+      return app.go('connect');
+    }
+    toast(
+      html`<b>OpenRouter connected.</b> ${r.freeTier ? 'You’re starting on the free model.' : `Using ${DQ.ai.modelName(r.model)}.`}${app.ready() ? ' Your first AI picks are on the way.' : ''}`,
+      { timeout: 7000 }
+    );
+    app.go('connect');
     if (app.ready()) DQ.ai.run().catch(() => {});
   });
   render();

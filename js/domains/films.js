@@ -97,7 +97,7 @@
       calibIntro: html`These are films you watched but never rated. Watching one already counts as a mild yes,
         so there's no need to rate them all. Tap <b>Loved it</b> for the ones that really stuck and
         <b>Didn't like it</b> for the ones you sat through; skip the rest. Stop whenever you like.`,
-      aiPitch: `Have a language model read your whole diary and suggest films the tags can't find:
+      aiPitch: `Have an AI model read your whole diary and suggest films the tags can't find:
         it picks up tone, style and why you liked something.`,
       eraseConfirm: 'Erase all your film data on this device, including your imported diary and Watchlist? Your book data and TMDB key are kept.',
       summaryLine(lib) {
@@ -182,9 +182,39 @@
         'Your diary, queue and learning are stored only in this browser.',
         'Film titles and years go to TMDB with your API key.',
         'Taste twins: a small helper on your own computer fetches each twin’s public Letterboxd RSS feed, at most every few hours.',
-        'With AI assist on, your film list, ratings and reactions go to the provider you choose, only when a run happens.',
+        'With AI picks on, your film list, ratings and reactions go to the AI service you choose, only when a batch is requested.',
         'From a Letterboxd export only the film files are read; of profile.csv, only your four favourites.',
       ],
+    },
+
+    // ---------- AI picks, explained for someone new to all this (views/connect.js) ----------
+    guide: {
+      title: 'Add a film buff to your queue',
+      intro: `Flicks finds films by matching genres, keywords and people. Connect an AI model and it also gets a second
+        opinion from something that knows about nearly every film there is, and can tell why you liked the ones you did.`,
+      benefits: [
+        { icon: 'heart', title: 'It gets why you liked something', text: 'A tag can say a film is a “thriller”. An AI model can tell that what you loved was the slow-burn dread, the deadpan humour or the way it was shot, and go looking for that.' },
+        { icon: 'compass', title: 'It finds what tags can’t', text: 'Films from another genre, another country or another decade that feel like your favourites, even though no database files them together.' },
+        { icon: 'film', title: 'Every pick comes with a reason', text: 'Each suggestion says, in a sentence or two, which of your own films it follows from, so you can judge it before you press play.' },
+        { icon: 'user', title: 'It describes your taste back to you', text: 'You also get a short portrait of yourself as a viewer, in plain words, on Your Taste.' },
+      ],
+      sends: 'your film titles, years and directors, your ratings, hearts and rewatches, and how you reacted to earlier picks',
+      notSent: 'Your name, email and anything else on your Letterboxd account are never part of it.',
+      metaphor: {
+        lead: 'Think of AI models as the people behind the counter at a video shop.',
+        text: `They all want to help, but they haven’t all seen the same amount. A bigger model has “seen” more and
+          notices more, and it costs more each time you ask.`,
+        levels: {
+          light: { name: 'The new hire', text: 'Friendly, fast and nearly free. Knows the new-release wall and the films everyone has seen. Ask for something like your favourite obscure film and you’ll get the famous one next to it, and now and then a title that sounds right but doesn’t exist.' },
+          solid: { name: 'The clerk who’s been there for years', text: 'Has worked through world cinema, the cult shelf and the festival circuit. Usually sees what you’re after and hands you things you hadn’t heard of. The sweet spot for most people.' },
+          deep: { name: 'The owner who has seen everything', text: 'Remembers what you rented three years ago and why you loved it. Spots the thread running through your diary (lonely people in big cities, say, rather than just “dramas”), reaches for the deep cuts, and tells you exactly why each one is for you.' },
+        },
+        rows: [
+          ['How far off the beaten path', 'Mostly well-known films', 'Well-known films and hidden gems', 'Deep cuts: older, foreign, half-forgotten'],
+          ['Made-up titles', 'Now and then', 'Rare', 'Very rare'],
+          ['The reasons it gives', 'General: “you like horror”', 'Tied to films you rated highly', 'Tied to why you liked them'],
+        ],
+      },
     },
 
     // ---------- import / export ----------

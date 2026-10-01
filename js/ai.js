@@ -11,9 +11,15 @@
    All calls go straight from this page to the provider; the key never goes anywhere else.
 
    OpenRouter can be connected in one click (OAuth PKCE: the user approves on openrouter.ai and the
-   page receives a key of their own). Reasoning is kept low: it's billed as output and a
-   recommendation list doesn't need it. A bake-off runs the same request on several models with the
-   user's own watchlist hidden, so they can see which one reads their taste best for the money. */
+   page receives a key of their own). Any other key can simply be pasted: the service is recognised
+   from the key, the key is checked before anything is saved, and a model is picked for it. Reasoning
+   is kept low: it's billed as output and a recommendation list doesn't need it. A bake-off runs the
+   same request on several models with the user's own watchlist hidden, so they can see which one
+   reads their taste best for the money.
+
+   The guided set-up page (views/connect.js) is written for people who have never seen an API key,
+   so errors here are worded as what went wrong and what to do next, with the provider's own message
+   kept apart as detail. */
 (function () {
   const { sleep } = DQ.util;
   const state = DQ.state;
@@ -21,61 +27,112 @@
   const D = DQ.D;
   const A = D.ai;
 
-  // Curated OpenRouter picks. Prices are $ per million tokens, captured 2026-09-30; the How it works
+  // Curated OpenRouter picks. Prices are $ per million tokens, captured 2026-10-01; the How it works
   // tab shows live ones. Knowledge of obscure titles grows with model size: the source lookup drops
-  // invented titles, but a weak model wastes slots.
+  // invented titles, but a weak model wastes slots. `level` is the model's size class in plain words
+  // (light, solid, deep); the domain turns it into a bookseller or a video-shop clerk.
+  // `why` is for the How it works table; `plain` says the same without the jargon, for the set-up page.
   const RECOMMENDED = [
-    { id: 'google/gemini-3.8-flash', tier: 'Best value', price: { in: 0.75, out: 3.75 },
-      why: 'Broad knowledge of obscure, international and recent titles, and reliable JSON. The default.' },
-    { id: 'openai/gpt-6-luna', tier: 'Budget', price: { in: 0.1, out: 0.5 },
-      why: 'A fraction of a cent a run. Worth it if the bake-off shows it keeps up.' },
-    { id: 'deepseek/deepseek-v4.1-flash', tier: 'Budget, open', price: { in: 0.3, out: 1.2 },
-      why: 'A large open model with deep knowledge for the price (cheaper still through Hugging Face).' },
-    { id: 'anthropic/claude-sonnet-5.5', tier: 'Premium', price: { in: 2, out: 10 },
-      why: 'Best at reading why you like things and explaining its picks. For an occasional deep run.' },
-    { id: 'nvidia/nemotron-3.5-lightning:free', tier: 'Free', price: { in: 0, out: 0 },
-      why: 'Costs nothing but is rate-limited and small: expect more misses on obscure titles.' },
+    { id: 'google/gemini-3.8-flash', name: 'Gemini 3.8 Flash', level: 'solid', tier: 'Best value', price: { in: 0.75, out: 3.75 },
+      why: 'Broad knowledge of obscure, international and recent titles, and reliable JSON. The default.',
+      plain: 'Knows obscure, international and recent titles well. The one to use once you have credit.' },
+    { id: 'openai/gpt-6-luna', name: 'GPT-6 Luna', level: 'light', tier: 'Budget', price: { in: 0.1, out: 0.5 },
+      why: 'A fraction of a cent a run. Worth it if the bake-off shows it keeps up.',
+      plain: 'A fraction of a cent a batch. Fine if your taste runs fairly mainstream.' },
+    { id: 'deepseek/deepseek-v4.1-flash', name: 'DeepSeek V4.1 Flash', level: 'solid', tier: 'Budget, open', price: { in: 0.02, out: 0.4 },
+      why: 'A large open model with deep knowledge for the price (cheaper still through Hugging Face).',
+      plain: 'An open model that knows a surprising amount for the price.' },
+    { id: 'anthropic/claude-sonnet-5.5', name: 'Claude Sonnet 5.5', level: 'deep', tier: 'Premium', price: { in: 2, out: 10 },
+      why: 'Best at reading why you like things and explaining its picks. For an occasional deep run.',
+      plain: 'Best at reading why you like things and explaining its picks. For an occasional treat.' },
+    { id: 'nvidia/nemotron-3.5-lightning:free', name: 'Nemotron 3.5 Lightning', level: 'light', tier: 'Free', price: { in: 0, out: 0 },
+      why: 'Costs nothing but is rate-limited and small: expect more misses on obscure titles.',
+      plain: 'Costs nothing, but it is small and shared by many people: expect more misses and the odd busy signal.' },
   ];
   const DEFAULT_MODEL = RECOMMENDED[0].id;
+  // What a brand-new OpenRouter account (no credit yet) starts on, and where to turn if it's retired.
+  const FREE_MODEL = RECOMMENDED.find((m) => m.id.endsWith(':free')).id;
+  const FREE_ROUTER = 'openrouter/free';
   // The bake-off's default line-up: the value pick against the two budget picks.
   const BAKEOFF = { openrouter: RECOMMENDED.slice(0, 3).map((m) => m.id) };
 
+  // `tiers` are the models the guided set-up offers, best first within reason; `price` names the same
+  // model on OpenRouter's public price list, which is where every cost estimate comes from.
+  // `keyRe` recognises a pasted key; `creditUrl` is where an empty balance gets topped up.
   const PROVIDERS = {
     anthropic: {
-      label: 'Anthropic (Claude)', protocol: 'anthropic', base: 'https://api.anthropic.com/v1',
-      model: 'claude-opus-5-5', suggest: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-4-5'],
-      keyUrl: 'https://platform.claude.com/settings/keys', keyHint: 'sk-ant-…',
+      label: 'Anthropic (Claude)', name: 'Anthropic', protocol: 'anthropic', base: 'https://api.anthropic.com/v1',
+      model: 'claude-sonnet-5-5', suggest: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-4-5'],
+      keyUrl: 'https://platform.claude.com/settings/keys', keyHint: 'sk-ant-…', keyRe: /^sk-ant-/,
+      creditUrl: 'https://platform.claude.com/settings/billing',
+      tiers: [
+        { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', level: 'deep', price: 'anthropic/claude-sonnet-5.5', why: 'Reads why you like things and explains each pick well. The sensible everyday choice.' },
+        { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', level: 'deep', price: 'anthropic/claude-opus-5.5', why: 'The most perceptive reading of your taste, at about twice the price.' },
+        { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', level: 'light', price: 'anthropic/claude-haiku-4.5', why: 'Quick and about half the price. Fine for well-known territory.' },
+      ],
     },
     openai: {
-      label: 'OpenAI', protocol: 'openai', base: 'https://api.openai.com/v1',
+      label: 'OpenAI', name: 'OpenAI', protocol: 'openai', base: 'https://api.openai.com/v1',
       model: 'gpt-6-luna', suggest: ['gpt-6-luna', 'gpt-6-sol'], jsonMode: true, maxTokensParam: 'max_completion_tokens', reasoning: 'effort',
-      keyUrl: 'https://platform.openai.com/api-keys', keyHint: 'sk-…',
+      keyUrl: 'https://platform.openai.com/api-keys', keyHint: 'sk-…', keyRe: /^sk-(?!ant-|or-)/,
+      creditUrl: 'https://platform.openai.com/settings/organization/billing/overview',
+      tiers: [
+        { id: 'gpt-6-luna', name: 'GPT-6 Luna', level: 'light', price: 'openai/gpt-6-luna', why: 'A fraction of a cent a batch. A sensible place to start.' },
+        { id: 'gpt-6-sol', name: 'GPT-6 Sol', level: 'deep', price: 'openai/gpt-6-sol', why: 'The big one: deeper cuts and better reasons, for a few cents.' },
+      ],
     },
     gemini: {
-      label: 'Google Gemini', protocol: 'openai', base: 'https://generativelanguage.googleapis.com/v1beta/openai',
+      label: 'Google Gemini', name: 'Google', protocol: 'openai', base: 'https://generativelanguage.googleapis.com/v1beta/openai',
       model: 'gemini-3.8-flash', suggest: ['gemini-3.8-flash', 'gemini-3.5-flash-lite'], jsonMode: true, reasoning: 'effort',
-      keyUrl: 'https://aistudio.google.com/apikey', keyHint: 'AIza…',
+      keyUrl: 'https://aistudio.google.com/apikey', keyHint: 'AIza…', keyRe: /^AIza/,
+      creditUrl: 'https://aistudio.google.com/apikey', freeTier: true,
+      tiers: [
+        { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash', level: 'solid', price: 'google/gemini-3.8-flash', why: 'Broad knowledge of obscure, international and recent titles.' },
+        { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite', level: 'light', price: 'google/gemini-3.5-flash-lite', why: 'Smaller and faster, with a roomier free allowance.' },
+      ],
     },
     openrouter: {
-      label: 'OpenRouter (hundreds of models)', protocol: 'openai', base: 'https://openrouter.ai/api/v1',
+      label: 'OpenRouter (hundreds of models)', name: 'OpenRouter', protocol: 'openai', base: 'https://openrouter.ai/api/v1',
       model: DEFAULT_MODEL, suggest: [...RECOMMENDED.map((m) => m.id), 'qwen/qwen3.8-flash', 'xiaomi/mimo-v2.6-flash', 'z-ai/glm-5.3-flash'],
       reasoning: 'openrouter', jsonMode: true, multiModel: true,
-      keyUrl: 'https://openrouter.ai/keys', keyHint: 'sk-or-…', headers: { 'X-Title': DQ.D.brand.name },
+      keyUrl: 'https://openrouter.ai/keys', keyHint: 'sk-or-…', keyRe: /^sk-or-/, headers: { 'X-Title': DQ.D.brand.name },
+      creditUrl: 'https://openrouter.ai/settings/credits',
+      tiers: RECOMMENDED.map((m) => ({ ...m, price: m.id, why: m.plain })),
     },
     huggingface: {
-      label: 'Hugging Face (open models)', protocol: 'openai', base: 'https://router.huggingface.co/v1',
+      label: 'Hugging Face (open models)', name: 'Hugging Face', protocol: 'openai', base: 'https://router.huggingface.co/v1',
       model: 'deepseek-ai/DeepSeek-V4.1-Flash:cheapest', multiModel: true,
       suggest: ['deepseek-ai/DeepSeek-V4.1-Flash:cheapest', 'Qwen/Qwen3-235B-A22B-Instruct-2507:cheapest', 'zai-org/GLM-5.3-Flash:cheapest', 'openai/gpt-oss-120b:cheapest'],
-      keyUrl: 'https://huggingface.co/settings/tokens/new?ownUserPermissions=inference.serverless.write&tokenType=fineGrained', keyHint: 'hf_…',
+      keyUrl: 'https://huggingface.co/settings/tokens/new?ownUserPermissions=inference.serverless.write&tokenType=fineGrained', keyHint: 'hf_…', keyRe: /^hf_/,
+      creditUrl: 'https://huggingface.co/settings/billing',
+      tiers: [
+        { id: 'deepseek-ai/DeepSeek-V4.1-Flash:cheapest', name: 'DeepSeek V4.1 Flash', level: 'solid', price: 'deepseek/deepseek-v4.1-flash', why: 'A large open model with deep knowledge for very little.' },
+        { id: 'openai/gpt-oss-120b:cheapest', name: 'gpt-oss 120B', level: 'light', price: 'openai/gpt-oss-120b', why: 'An older open model. Cheaper still, with more misses.' },
+      ],
     },
     local: {
-      label: 'Local model (Ollama, LM Studio)', protocol: 'openai', base: 'http://localhost:11434/v1',
-      model: '', suggest: [], keyOptional: true, keyUrl: 'https://ollama.com/download', local: true,
+      label: 'Local model (Ollama, LM Studio)', name: 'your computer', protocol: 'openai', base: 'http://localhost:11434/v1',
+      model: '', suggest: [], keyOptional: true, keyUrl: 'https://ollama.com/download', local: true, tiers: [],
     },
     custom: {
-      label: 'Other OpenAI-compatible API', protocol: 'openai', base: '', model: '', suggest: [], keyOptional: true,
+      label: 'Other OpenAI-compatible API', name: 'the provider', protocol: 'openai', base: '', model: '', suggest: [], keyOptional: true, tiers: [],
     },
   };
+
+  // ---------- models in plain words ----------
+  const TIER_BY_ID = new Map();
+  for (const p of Object.values(PROVIDERS)) for (const t of p.tiers) if (!TIER_BY_ID.has(t.id)) TIER_BY_ID.set(t.id, t);
+  /** What's known about a model id: its everyday name and size class, when it's one of ours. */
+  const modelInfo = (id) => TIER_BY_ID.get(id) || null;
+  /** "Gemini 3.8 Flash" for a model we know; otherwise the id without its vendor prefix. */
+  const modelName = (id) => modelInfo(id)?.name || String(id || '').split('/').pop().replace(/:[a-z]+$/, '');
+
+  /** Which service a pasted key belongs to, from its opening characters (null when it can't tell). */
+  function detectProvider(key) {
+    const k = String(key || '').trim();
+    for (const [id, p] of Object.entries(PROVIDERS)) if (p.keyRe?.test(k)) return id;
+    return null;
+  }
 
   // ---------- settings & key ----------
   // The key lives in localStorage only when "remember" is on; otherwise in this tab's sessionStorage.
@@ -126,25 +183,28 @@
   const modelLabel = () => cfg().model || '';
 
   // ---------- transport ----------
+  // `kind` says what to do about it (the set-up page offers a matching fix): 'auth' a key problem,
+  // 'credit' an empty balance, 'rate' slow down or a used-up free allowance, 'model' pick another,
+  // 'network', 'timeout', 'server', 'parse', 'config'. `detail` is the provider's own wording.
   class AIError extends Error {
-    constructor(msg, kind) {
+    constructor(msg, kind, detail = '') {
       super(msg);
       this.kind = kind;
+      this.detail = detail;
     }
   }
 
-  async function http(url, opts, timeoutMs) {
+  async function http(url, opts, timeoutMs, p = provider()) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
       return await fetch(url, { ...opts, signal: ctrl.signal });
     } catch (e) {
       if (e.name === 'AbortError') throw new AIError('The model took too long to answer. Try again, or pick a faster model.', 'timeout');
-      const p = provider();
       throw new AIError(
         p.local
-          ? "Couldn't reach the local model server. Is it running? Ollama needs OLLAMA_ORIGINS to include this page's address."
-          : `Couldn't reach ${p.label}. Check your connection and the base URL.`,
+          ? "Couldn't find a model server on this computer. Is Ollama (or LM Studio) open and running?"
+          : `Couldn't reach ${p.name}. Check your internet connection and try again.`,
         'network'
       );
     } finally {
@@ -152,20 +212,44 @@
     }
   }
 
-  async function failFrom(res) {
+  const CREDIT_RE = /insufficient[_ ](quota|credit|balance|funds)|credit balance|out of credit|requires? (more )?credits|billing|payment required|exceeded your current quota/i;
+  const KEY_RE = /api[_ -]?key|unauthori[sz]ed|invalid.*(token|credential)|user not found|invalid username/i;
+
+  /** A failed response, in plain words: what went wrong and what to do, for the provider in play. */
+  async function failFrom(res, { p = provider(), model = cfg().model } = {}) {
     let detail = '';
     try {
       const j = await res.json();
-      detail = j.error?.message || j.error?.type || j.message || JSON.stringify(j).slice(0, 200);
+      const e = Array.isArray(j) ? j[0]?.error : j.error;
+      detail = e?.message || e?.type || (typeof e === 'string' ? e : '') || j.message || JSON.stringify(j).slice(0, 200);
     } catch {}
+    detail = String(detail).slice(0, 220);
     const s = res.status;
-    const msg =
-      s === 401 || s === 403 ? 'The API key was rejected.'
-      : s === 404 ? `Model or endpoint not found. Use "Load models" to pick one your key can use.`
-      : s === 429 ? 'Rate limited or out of credit with this provider.'
-      : s === 402 ? 'This provider needs credit on the account.'
-      : `The provider returned an error (${s}).`;
-    return new AIError(detail ? `${msg} ${String(detail).slice(0, 220)}` : msg, `http${s}`);
+    const free = /:free$/.test(model || '') || model === FREE_ROUTER;
+    let kind, msg;
+    // A free tier that says "quota" means today's allowance, not an empty wallet.
+    if (s === 402 || (CREDIT_RE.test(detail) && !(p.freeTier && s === 429))) {
+      kind = 'credit';
+      msg = `Your ${p.name} account has no credit left. Add a few dollars there and try again.`;
+    } else if (s === 401 || s === 403 || (s === 400 && KEY_RE.test(detail))) {
+      kind = 'auth';
+      msg = `${p.name} didn't accept that key. Keys are long and easy to clip when copying: make a fresh one and paste the whole thing.`;
+    } else if (s === 429) {
+      kind = 'rate';
+      msg = free || p.freeTier
+        ? `You've reached the free allowance with ${p.name} for now, or the free model is busy. Try again later, or add a little credit there for a steadier service.`
+        : `${p.name} is asking us to slow down. Wait a minute and try again.`;
+    } else if (s === 404) {
+      kind = 'model';
+      msg = `${p.name} doesn't offer “${modelName(model)}” to this account. Pick another model.`;
+    } else if (s >= 500) {
+      kind = 'server';
+      msg = `${p.name} is having trouble right now. Try again in a few minutes.`;
+    } else {
+      kind = 'other';
+      msg = `${p.name} couldn't handle that request (error ${s}). Try again, or pick another model.`;
+    }
+    return new AIError(msg, kind, detail);
   }
 
   // Claude capabilities by model family (the user can type any model id).
@@ -195,9 +279,9 @@
       body.fallbacks = 'default';
     }
     const res = await http(`${c.base || provider().base}/messages`, { method: 'POST', headers, body: JSON.stringify(body) }, 240000);
-    if (!res.ok) throw await failFrom(res);
+    if (!res.ok) throw await failFrom(res, { model });
     const data = await res.json();
-    if (data.stop_reason === 'refusal') throw new AIError('The model declined this request.', 'refusal');
+    if (data.stop_reason === 'refusal') throw new AIError('The model declined this request. Try again, or pick another model.', 'refusal');
     return {
       text: (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join(''),
       truncated: data.stop_reason === 'max_tokens',
@@ -227,10 +311,12 @@
     if (key) headers.authorization = `Bearer ${key}`;
     const res = await http(`${c.base || p.base}/chat/completions`, { method: 'POST', headers, body: JSON.stringify(body) }, 240000);
     if (!res.ok) {
-      const err = await failFrom(res);
+      const err = await failFrom(res, { model });
       // Not every model takes JSON mode or a reasoning setting; retry once without the one it rejected.
-      if (res.status === 400 && lowReasoning && /reasoning/i.test(err.message)) return callOpenAI(req, { jsonMode, lowReasoning: false });
-      if (res.status === 400 && jsonMode && /response_format|json/i.test(err.message)) return callOpenAI(req, { jsonMode: false, lowReasoning });
+      if (res.status === 400 && lowReasoning && /reasoning/i.test(err.detail)) return callOpenAI(req, { jsonMode, lowReasoning: false });
+      if (res.status === 400 && jsonMode && /response_format|json/i.test(err.detail)) return callOpenAI(req, { jsonMode: false, lowReasoning });
+      // Free models come and go on OpenRouter; its free router stands in for one that has been retired.
+      if (res.status === 404 && p.reasoning === 'openrouter' && /:free$/.test(model)) return callOpenAI({ ...req, model: FREE_ROUTER }, { jsonMode, lowReasoning });
       throw err;
     }
     const data = await res.json();
@@ -254,10 +340,70 @@
       p.protocol === 'anthropic'
         ? { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }
         : key ? { authorization: `Bearer ${key}` } : {};
-    const res = await http(`${root}/models${p.protocol === 'anthropic' ? '?limit=100' : ''}`, { headers }, 30000);
-    if (!res.ok) throw await failFrom(res);
+    const res = await http(`${root}/models${p.protocol === 'anthropic' ? '?limit=100' : ''}`, { headers }, 30000, p);
+    if (!res.ok) throw await failFrom(res, { p, model: '' });
     const data = await res.json();
     return (data.data || data.models || []).map((m) => (m.id || m.name || '').replace(/^models\//, '')).filter(Boolean).sort();
+  }
+
+  // ---------- checking a key & connecting ----------
+  /** OpenRouter's own account of a key: whether credit has ever been bought, and today's free allowance. */
+  async function openRouterKeyInfo(key) {
+    const p = PROVIDERS.openrouter;
+    const res = await http(`${p.base}/key`, { headers: { authorization: `Bearer ${key}` } }, 30000, p);
+    if (!res.ok) throw await failFrom(res, { p, model: '' });
+    const d = (await res.json()).data || {};
+    return { freeTier: !!d.is_free_tier, freeLeft: d.free_model_daily_requests?.remaining ?? null, freeLimit: d.free_model_daily_requests?.limit ?? null };
+  }
+
+  /**
+   * Is this key real, and what can it use? Asks the provider something harmless that only a valid
+   * key can answer. Resolves { models, freeTier?, freeLeft? } or throws an AIError worded for the reader.
+   */
+  async function checkKey({ provider: pid, key = '', base = '' }) {
+    const p = PROVIDERS[pid];
+    key = key.trim();
+    if (!key && !p.keyOptional) throw new AIError('Paste your key first.', 'auth');
+    if (pid === 'openrouter') return { models: [], ...(await openRouterKeyInfo(key)) };
+    if (pid === 'huggingface') {
+      // The model list there is public, so it can't vouch for a token; "who am I" can.
+      const res = await http('https://huggingface.co/api/whoami-v2', { headers: { authorization: `Bearer ${key}` } }, 30000, p);
+      if (!res.ok) throw await failFrom(res, { p, model: '' });
+      return { models: [] };
+    }
+    const models = await listModels({ provider: pid, base, key });
+    if (p.local && !models.length) {
+      throw new AIError('The model server is running but has no models yet. Download one first (step 2), then try again.', 'model');
+    }
+    return { models };
+  }
+
+  /** Where a newcomer to this service begins, for the guides to mark among the models on offer. */
+  const usualStart = (pid) => (pid === 'openrouter' ? FREE_MODEL : PROVIDERS[pid].model);
+
+  /** The model a fresh connection starts on: the provider's usual one, or the first of ours the key can use. */
+  function startingModel(pid, { models = [], freeTier = false } = {}) {
+    const p = PROVIDERS[pid];
+    if (pid === 'openrouter' && freeTier) return FREE_MODEL;
+    if (p.local) return models[0] || '';
+    const usable = (id) => !models.length || models.some((m) => m === id || m.startsWith(id + '-'));
+    return [p.model, ...p.tiers.map((t) => t.id)].find((id) => id && usable(id)) || p.model;
+  }
+
+  /**
+   * The whole of "paste a key": work out the service (unless given), check the key, pick a model and
+   * switch AI picks on. Resolves { provider, model, freeTier } or throws an AIError; nothing is saved
+   * unless the key checked out.
+   */
+  async function connectWithKey({ key = '', provider: pid, model, base = '' }) {
+    key = key.trim();
+    pid = pid || detectProvider(key);
+    if (!pid) throw new AIError("I can't tell which service that key is from. Open that service's guide below and paste it there.", 'auth');
+    const info = await checkKey({ provider: pid, key, base });
+    // An account that has never bought credit can only run the free model, whatever was asked for.
+    const chosen = (!info.freeTier && model) || startingModel(pid, info);
+    saveSettings({ provider: pid, model: chosen, base: PROVIDERS[pid].local ? base || PROVIDERS[pid].base : '', key, remember: true, auto: true });
+    return { provider: pid, model: chosen, freeTier: !!info.freeTier };
   }
 
   // ---------- prompt ----------
@@ -417,7 +563,7 @@
         emit({ state: 'done', added, found, suggested: parsed.recs.length });
         return { added, found, suggested: parsed.recs.length };
       } catch (e) {
-        cfg().lastError = { message: e.message, t: Date.now() };
+        cfg().lastError = { message: e.message, kind: e.kind || 'other', detail: e.detail || '', t: Date.now() };
         DQ.store.save('ai');
         running = null;
         emit({ state: 'error', message: e.message });
@@ -464,23 +610,33 @@
       .catch(() => false);
     return pricesLoaded;
   }
-  const priceFor = (id) => livePrice.get(id) || RECOMMENDED.find((m) => m.id === id)?.price || null;
+  // The other models the set-up page prices, for when the live list can't be fetched (same capture date).
+  const SNAPSHOT = {
+    'anthropic/claude-opus-5.5': { in: 4, out: 20 }, 'anthropic/claude-haiku-4.5': { in: 1, out: 5 }, 'openai/gpt-6-sol': { in: 2, out: 10 },
+    'google/gemini-3.5-flash-lite': { in: 0.3, out: 2.5 }, 'openai/gpt-oss-120b': { in: 0.04, out: 0.17 },
+  };
+  const priceFor = (id) => livePrice.get(id) || RECOMMENDED.find((m) => m.id === id)?.price || SNAPSHOT[id] || null;
   /** $ for a request of this size on this model, or null when its price isn't known. */
   function estimateCost(model, usage) {
     const p = priceFor(model);
     if (!p || !usage?.in) return null;
     return (usage.in * p.in + (usage.out || 0) * p.out) / 1e6;
   }
+  /** A cost in everyday money: 0.0027 -> "0.27¢", 0.054 -> "5.4¢", 0.27 -> "$0.27", 0 -> "free". */
+  const fmtCost = (x) => (x == null ? '—' : x === 0 ? 'free' : x < 0.1 ? `${(x * 100).toFixed(x < 0.01 ? 2 : 1)}¢` : `$${x.toFixed(2)}`);
   let tokenEstimate = null;
-  /** What one run costs on a model, for the current library size. */
+  /** What one run costs on a model, for the current library size. A provider's own model id is
+      priced as the same model on OpenRouter's list (providers charge the same there as direct). */
   function runCost(model) {
-    tokenEstimate ||= estimateTokens();
-    return estimateCost(model, tokenEstimate);
+    // Before an import there is no library to size the request by: estimate, but don't keep it.
+    const tokens = tokenEstimate || (DQ.app.ready() ? (tokenEstimate = estimateTokens()) : estimateTokens());
+    const listed = modelInfo(model)?.price;
+    return estimateCost(typeof listed === 'string' ? listed : model, tokens);
   }
 
   /** Switch model on the connected provider (keeps the key). */
   function setModel(model) {
-    cfg().model = model;
+    Object.assign(cfg(), { model, lastError: null });
     DQ.store.save('ai');
   }
 
@@ -598,30 +754,39 @@
     } catch {}
     if (!code || !pending?.verifier) return null;
     sessionStorage.removeItem(PKCE_KEY);
-    history.replaceState(null, '', `${location.pathname}${location.hash || '#/how'}`);
+    history.replaceState(null, '', `${location.pathname}${location.hash || '#/connect'}`);
+    const p = PROVIDERS.openrouter;
     try {
       const res = await http(
         'https://openrouter.ai/api/v1/auth/keys',
         { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, code_verifier: pending.verifier, code_challenge_method: 'S256' }) },
-        30000
+        30000,
+        p
       );
-      if (!res.ok) throw await failFrom(res);
+      if (!res.ok) throw await failFrom(res, { p, model: '' });
       const { key } = await res.json();
       if (!key) throw new AIError('OpenRouter did not return a key.', 'auth');
-      const model = pending.model || DEFAULT_MODEL;
+      // A brand-new account has no credit, and a paid model would fail on the very first run:
+      // start it on the free model instead (the set-up page says how to unlock the others).
+      let freeTier = false;
+      try {
+        freeTier = (await openRouterKeyInfo(key)).freeTier;
+      } catch {}
+      const model = freeTier ? FREE_MODEL : pending.model || DEFAULT_MODEL;
       saveSettings({ provider: 'openrouter', model, base: '', key, remember: true, auto: true });
-      return { ok: true, model };
+      return { ok: true, model, freeTier };
     } catch (e) {
-      cfg().lastError = { message: `Connecting OpenRouter failed: ${e.message}`, t: Date.now() };
+      cfg().lastError = { message: `Connecting OpenRouter failed. ${e.message}`, kind: e.kind || 'other', detail: e.detail || '', t: Date.now() };
       DQ.store.save('ai');
       return { ok: false, message: e.message };
     }
   }
 
   DQ.ai = {
-    PROVIDERS, RECOMMENDED, DEFAULT_MODEL, enabled, provider, modelLabel, getKey, saveSettings, forget, setModel,
+    PROVIDERS, RECOMMENDED, DEFAULT_MODEL, FREE_MODEL, enabled, provider, modelLabel, getKey, saveSettings, forget, setModel,
+    modelInfo, modelName, detectProvider, checkKey, connectWithKey, usualStart,
     listModels, run, maybeRefresh, estimateTokens, recFor, isRunning: () => !!running,
-    loadPrices, priceFor, runCost, estimateCost, modelStats, bakeoff, bakeoffModels,
+    loadPrices, priceFor, runCost, estimateCost, fmtCost, modelStats, bakeoff, bakeoffModels,
     canConnect, connectOpenRouter, completeOpenRouterAuth,
   };
 })();

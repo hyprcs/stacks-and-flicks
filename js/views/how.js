@@ -12,8 +12,7 @@
   let bakeRows = null; // rows of a bake-off in flight
   let livePrices = false;
 
-  // 0.0027 -> "0.27¢", 0.054 -> "5.4¢", 0.27 -> "$0.27"
-  const cost = (x) => (x == null ? '—' : x === 0 ? 'free' : x < 0.1 ? `${(x * 100).toFixed(x < 0.01 ? 2 : 1)}¢` : `$${x.toFixed(2)}`);
+  const cost = DQ.ai.fmtCost;
   const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}%` : '—');
 
   function glance() {
@@ -115,14 +114,15 @@
       <p class="sub">Optional. A language model reads your ${W.library} and suggests ${W.items} the tags can't find.</p>
       <div class="how-connect">
         ${on
-          ? html`<p>${icon('check')} AI assist is on: <b>${p.label}</b> · <code>${c.model}</code>${c.lastStats?.cost != null ? html` · last run ${cost(c.lastStats.cost)}` : ''}</p>
+          ? html`<p>${icon('check')} AI picks are on: <b>${p.name}</b> · <code>${c.model}</code>${c.lastStats?.cost != null ? html` · last batch ${cost(c.lastStats.cost)}` : ''}</p>
+              ${c.lastError ? html`<p class="ai-error">${icon('warn')} <span>${c.lastError.message} <a href="#/connect">See how to fix it</a></span></p>` : ''}
               <div class="ai-actions"><button class="btn btn-primary" id="how-run" ${DQ.ai.isRunning() ? 'disabled' : ''}>${icon('spark')} ${DQ.ai.isRunning() ? 'Working…' : 'Get new AI picks'}</button>
-                <a class="btn" href="#/profile">${icon('sliders')} AI settings</a></div>`
-          : html`<p>Connect OpenRouter in one click: you sign in on openrouter.ai, approve, and come straight back with a key of your own.
-                One run costs well under a cent to a few cents depending on the model.</p>
+                <a class="btn" href="#/connect">${icon('sliders')} AI set-up</a></div>`
+          : html`<p>New to this? The set-up guide explains what you get, what it costs (it can be free) and how to connect, one step at a time.
+                It takes about two minutes.</p>
               <div class="ai-actions">
-                ${DQ.ai.canConnect() ? html`<button class="btn btn-primary" id="how-connect">${icon('spark')} Connect OpenRouter</button>` : ''}
-                <a class="btn" href="#/profile">Other providers (Claude, OpenAI, Gemini, Hugging Face, local)</a>
+                <a class="btn btn-primary" href="#/connect">${icon('spark')} Set up AI picks</a>
+                ${DQ.ai.canConnect() ? html`<button class="btn" id="how-connect">Connect OpenRouter now</button>` : ''}
               </div>`}
       </div>
 
@@ -137,7 +137,7 @@
       <div class="table-wrap"><table class="model-table rec"><thead><tr><th>Tier</th><th>Model</th><th class="num">Per run</th><th></th></tr></thead>
         <tbody id="model-rows">${modelRows()}</tbody></table></div>
       <p class="sub" style="margin-top:8px">Per run ≈ ${Math.round(DQ.ai.estimateTokens().in / 1000)}k tokens in and ~4k out for your library, with reasoning kept low (it’s billed as output).
-        Knowledge of obscure titles grows with model size; these models are newer than the assistant that set this up, so the bake-off below is the real test.</p>
+        Knowledge of obscure titles grows with model size (<a href="#/connect">what that means for your picks</a>); these models are newer than the assistant that set this up, so the bake-off below is the real test.</p>
 
       <h3 class="how-h3">Your results by model</h3>
       ${statsTable()}
@@ -150,7 +150,7 @@
       <div class="ai-actions">
         ${multi
           ? html`<button class="btn btn-primary" id="how-bake" ${bakeRows ? 'disabled' : ''}>${icon('compass')} ${bakeRows ? 'Testing…' : `Test ${models.length} models (≈ ${cost(bakeCost)})`}</button>`
-          : html`<p class="muted" style="margin:0">${on ? 'The bake-off needs OpenRouter or Hugging Face, which can reach several models with one key.' : 'Connect OpenRouter first.'}</p>`}
+          : html`<p class="muted" style="margin:0">${on ? 'The bake-off needs OpenRouter or Hugging Face, which can reach several models with one key.' : html`<a href="#/connect">Set up AI picks</a> first.`}</p>`}
       </div>
       <div id="bake-results">${bakeRows ? bakeTable(bakeRows) : last ? html`<p class="sub">Last test ${new Date(last.t).toLocaleString()}:</p>${bakeTable(last.rows, last.hidden)}` : ''}</div>
     </div>`;
@@ -210,7 +210,7 @@
       return rerender();
     }
     if (!DQ.ai.enabled() && DQ.ai.canConnect()) return DQ.ai.connectOpenRouter({ model: id });
-    toast('That model is on OpenRouter. Switch provider in AI settings on Your Taste to use it.', { timeout: 6000 });
+    toast(html`That model is on OpenRouter. <a href="#/connect">Connect OpenRouter</a> to use it.`, { timeout: 6000 });
   }
 
   function bind() {

@@ -4,7 +4,7 @@
    the last copy is served. Nothing else is cached here: API calls (the local helper), other sites
    (TMDB, Open Library, AI providers, fonts) and your own exports (.csv, .zip) go straight to the
    network. Bump VERSION when the list of shell files changes. */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `stacks-flicks-${VERSION}`;
 const SHELL = [
   './',
@@ -14,7 +14,7 @@ const SHELL = [
   'js/zip.js', 'js/letterboxd.js', 'js/tmdb.js', 'js/domains/books.js', 'js/domains/films.js', 'js/domain.js',
   'js/taste.js', 'js/recommender.js', 'js/twins.js', 'js/ai.js',
   'js/views/landing.js', 'js/views/analyze.js', 'js/views/calibrate.js', 'js/views/queue.js', 'js/views/wishlist.js',
-  'js/views/profile.js', 'js/views/how.js', 'js/app.js',
+  'js/views/profile.js', 'js/views/how.js', 'js/views/connect.js', 'js/app.js',
   'manifest-stacks.webmanifest', 'manifest-flicks.webmanifest',
   'icons/stacks-180.png', 'icons/stacks-192.png', 'icons/stacks-512.png', 'icons/stacks-maskable-512.png',
   'icons/flicks-180.png', 'icons/flicks-192.png', 'icons/flicks-512.png', 'icons/flicks-maskable-512.png',

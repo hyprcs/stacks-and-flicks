@@ -99,7 +99,7 @@
       calibIntro: html`Every book you finished already counts as one you liked, so there's no need to rate them all.
         Tap <b>Loved it</b> for the ones that really stuck and <b>Didn't like it</b> for the ones you pushed through;
         skip the rest. Stop whenever you like.`,
-      aiPitch: `Have a language model read your whole shelf and suggest books the subject tags can't find:
+      aiPitch: `Have an AI model read your whole shelf and suggest books the subject tags can't find:
         it picks up tone, style and why you liked something.`,
       eraseConfirm: 'Erase all your book data on this device, including your imported library and Want to Read list? Your film data is kept.',
       summaryLine(lib) {
@@ -176,8 +176,38 @@
       privacy: [
         'Your library, queue and learning are stored only in this browser.',
         'Book titles and ISBNs go to Open Library; Google Books is asked for the occasional missing description.',
-        'With AI assist on, your book list, ratings and reactions go to the provider you choose, only when a run happens.',
+        'With AI picks on, your book list, ratings and reactions go to the AI service you choose, only when a batch is requested.',
       ],
+    },
+
+    // ---------- AI picks, explained for someone new to all this (views/connect.js) ----------
+    guide: {
+      title: 'Add a well-read friend to your queue',
+      intro: `Stacks finds books by matching catalogue tags. Connect an AI model and it also gets a second opinion from
+        something that has read about nearly every book there is, and can tell why you liked the ones you did.`,
+      benefits: [
+        { icon: 'heart', title: 'It gets why you liked something', text: 'A tag can say a book is “science fiction”. An AI model can tell that what you loved was the dry humour, the slow-burn dread or the narrator you couldn’t trust, and go looking for that.' },
+        { icon: 'compass', title: 'It finds what tags can’t', text: 'Books from another genre, another country or another century that feel like your favourites, even though no catalogue files them together.' },
+        { icon: 'book', title: 'Every pick comes with a reason', text: 'Each suggestion says, in a sentence or two, which of your own books it follows from, so you can judge it before you read a page.' },
+        { icon: 'user', title: 'It describes your taste back to you', text: 'You also get a short portrait of yourself as a reader, in plain words, on Your Taste.' },
+      ],
+      sends: 'your book titles and authors, your ratings and shelves, and how you reacted to earlier picks',
+      notSent: 'Your name, email and anything else on your Goodreads account are never part of it.',
+      metaphor: {
+        lead: 'Think of AI models as booksellers.',
+        text: `They all want to help, but they haven’t all read the same amount. A bigger model has “read” more and
+          notices more, and it costs more each time you ask.`,
+        levels: {
+          light: { name: 'The weekend temp', text: 'Friendly, fast and nearly free. Knows the bestseller table and the books everyone read at school. Ask for something like your favourite obscure novel and you’ll get the famous book next to it, and now and then a title that sounds right but doesn’t exist.' },
+          solid: { name: 'The career bookseller', text: 'Has read widely: translated fiction, small presses, the backlist. Usually sees what you’re after and hands you things you hadn’t heard of. The sweet spot for most people.' },
+          deep: { name: 'The owner who has read everything', text: 'Remembers what you bought three years ago and why you loved it. Spots the thread running through your shelves (unreliable narrators, say, rather than just “mysteries”), reaches for the deep cuts, and tells you exactly why each one is for you.' },
+        },
+        rows: [
+          ['How far off the beaten path', 'Mostly well-known books', 'Well-known books and hidden gems', 'Deep cuts: older, translated, half-forgotten'],
+          ['Made-up titles', 'Now and then', 'Rare', 'Very rare'],
+          ['The reasons it gives', 'General: “you like fantasy”', 'Tied to books you rated highly', 'Tied to why you liked them'],
+        ],
+      },
     },
 
     // ---------- import / export ----------

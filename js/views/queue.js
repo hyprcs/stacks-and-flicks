@@ -518,7 +518,7 @@
         ? html`<div class="seg-label">AI picks per queue</div>
             ${seg('aiPerQueue', [[2, 'Few'], [4, 'Some'], [8, 'Lots']])}
             <button class="btn btn-sm" id="ai-now" ${DQ.ai.isRunning() ? 'disabled' : ''}>${icon('spark')} Get new AI picks now</button>`
-        : html`<p class="seg-note" style="margin:0">Want picks from a language model too? <a href="#/profile">Set up AI assist</a> (optional, bring your own key).</p>`}`);
+        : html`<p class="seg-note" style="margin:0">Want picks from an AI model too? <a href="#/connect">Set up AI picks</a> (optional, free to start).</p>`}`);
     el.addEventListener('click', (e) => {
       if (e.target.closest('#ai-now')) {
         closePopover();
@@ -567,10 +567,8 @@
       .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
       .slice(0, 6);
 
-    // One-time offer of AI picks, when they're off and one-click connect is possible.
-    const showNudge = !DQ.ai.enabled() && DQ.ai.canConnect() && !state.ai?.nudged;
-    const c = DQ.ai.runCost(DQ.ai.DEFAULT_MODEL);
-    const nudgeCost = c == null ? 'a cent or two' : c < 0.1 ? `${(c * 100).toFixed(c < 0.01 ? 2 : 1)}¢` : `$${c.toFixed(2)}`;
+    // One-time offer of AI picks, when they're off. The set-up guide does the explaining.
+    const showNudge = !DQ.ai.enabled() && !state.ai?.nudged;
     $('#actions', root).hidden = true;
     $('#hints', root).hidden = true;
     renderDots();
@@ -595,9 +593,9 @@
           : html`<p class="muted" style="margin:0">Nothing decisive yet. Passing on a few or adding a few gives me more to go on.</p>`}
       </div>
       ${showNudge ? html`<div class="ai-nudge" id="ai-nudge">${icon('spark')}
-        <div><b>Want AI picks too?</b> A language model can read your ${W.library} and suggest ${W.items} the tags miss.
-          Connect OpenRouter in one click; a run costs about ${nudgeCost}.</div>
-        <div class="ai-actions"><button class="btn btn-sm btn-primary" id="nudge-connect">Connect OpenRouter</button>
+        <div><b>Want AI picks too?</b> An AI model can read your ${W.library} and suggest ${W.items} the tags miss, each with a reason.
+          It's free to start and takes about two minutes to set up.</div>
+        <div class="ai-actions"><a class="btn btn-sm btn-primary" href="#/connect">See how it works</a>
           <button class="btn btn-sm btn-ghost" id="nudge-later">Not now</button></div>
       </div>` : ''}
       <div class="summary-actions">
@@ -608,7 +606,6 @@
     </div>`);
     $('#again', root).onclick = newQueue;
     $('#again', root).focus({ preventScroll: true });
-    $('#nudge-connect', root)?.addEventListener('click', () => DQ.ai.connectOpenRouter());
     $('#nudge-later', root)?.addEventListener('click', () => {
       state.ai.nudged = true;
       DQ.store.save('ai');
