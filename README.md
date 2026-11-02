@@ -113,7 +113,7 @@ A ChatGPT Plus or Claude subscription does not count as credit: those cover the 
 
 **Google Gemini.** Open <https://aistudio.google.com/apikey>, sign in with your Google account and accept the terms. Press **Create API key** (first-time visitors often get one made automatically), press the copy button beside it, and paste it into the app.
 
-**Anthropic.** Create an account at <https://platform.claude.com> (separate from the Claude chat app). Buy a small amount of credit under **Billing**. Under **API keys** press **Create Key**, copy it straight away (it starts with `sk-ant-` and is shown only once), and paste it into the app. You start on Claude Sonnet 5.5; Claude Opus 5.5 (closer reading, about twice the price) and Claude Haiku 4.5 (about half the price) are one click away.
+**Anthropic.** Create an account at <https://platform.claude.com> (separate from the Claude chat app). Buy a small amount of credit under **Billing**. Under **API keys** press **Create Key**, copy it straight away (it starts with `sk-ant-` and is shown only once), and paste it into the app. You start on Claude Sonnet 5.5; Claude Opus 5.5 (closer reading, about twice the price) and Claude Haiku 5.5 (about a twentieth of the price) are one click away.
 
 **OpenAI.** Sign up at <https://platform.openai.com> (separate from ChatGPT). Add a payment method and a small amount of credit under **Billing**. On the **API keys** page press **Create new secret key**, copy it straight away (it starts with `sk-`), and paste it into the app.
 
@@ -136,7 +136,7 @@ Models differ in how much they have "read". Bigger ones notice more and cost mor
 | **Made-up titles** (always thrown away) | Now and then | Rare | Very rare |
 | **The reasons it gives** | General: "you like fantasy" | Tied to things you rated highly | Tied to why you liked them |
 | **A batch costs** | Free, or a fraction of a cent | About 2¢ | About 5¢ to 10¢ |
-| **Such as** | GPT-6 Luna, Claude Haiku 4.5, the free models, anything that runs on a home computer | Gemini 3.8 Flash, DeepSeek V4.1 Flash | Claude Opus 5.5, Claude Sonnet 5.5, GPT-6 Sol |
+| **Such as** | GPT-6 Luna, Claude Haiku 5.5, the free models, anything that runs on a home computer | Gemini 3.8 Flash, DeepSeek V4.1 Flash | Claude Opus 5.5, Claude Sonnet 5.5, GPT-6 Sol |
 
 (In Flicks the same three are the new hire at the video shop, the clerk who's been there for years, and the owner who has seen everything.) These are tendencies, not promises: a newer small model can beat an older large one, which is what the blind test below is for.
 
