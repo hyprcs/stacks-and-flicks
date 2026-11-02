@@ -138,7 +138,7 @@
       ],
       form: () => keyForm('anthropic'),
       notes: () => [
-        html`<b>What it costs.</b> ${perBatch('claude-sonnet-5-5')} on Claude Sonnet 5.5, where you start. Claude Opus 5.5 reads your taste more closely for about twice that, and Claude Haiku 4.5 costs about half.`,
+        html`<b>What it costs.</b> ${perBatch('claude-sonnet-5-5')} on Claude Sonnet 5.5, where you start. Claude Opus 5.5 reads your taste more closely for about twice that, and Claude Haiku 5.5 costs about a twentieth.`,
       ],
     },
     {
