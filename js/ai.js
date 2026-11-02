@@ -62,13 +62,13 @@
   const PROVIDERS = {
     anthropic: {
       label: 'Anthropic (Claude)', name: 'Anthropic', protocol: 'anthropic', base: 'https://api.anthropic.com/v1',
-      model: 'claude-sonnet-5-5', suggest: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-4-5'],
+      model: 'claude-sonnet-5-5', suggest: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5'],
       keyUrl: 'https://platform.claude.com/settings/keys', keyHint: 'sk-ant-…', keyRe: /^sk-ant-/,
       creditUrl: 'https://platform.claude.com/settings/billing',
       tiers: [
         { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', level: 'deep', price: 'anthropic/claude-sonnet-5.5', why: 'Reads why you like things and explains each pick well. The sensible everyday choice.' },
         { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', level: 'deep', price: 'anthropic/claude-opus-5.5', why: 'The most perceptive reading of your taste, at about twice the price.' },
-        { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', level: 'light', price: 'anthropic/claude-haiku-4.5', why: 'Quick and about half the price. Fine for well-known territory.' },
+        { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5', level: 'light', price: 'anthropic/claude-haiku-5.5', why: 'Quick and about a twentieth of the price. Fine for well-known territory.' },
       ],
     },
     openai: {
@@ -254,8 +254,8 @@
 
   // Claude capabilities by model family (the user can type any model id).
   const CLAUDE = {
-    effort: /^claude-(fable|mythos|opus-5|opus-4-[5-8]|sonnet-5|sonnet-4-6)/,
-    structured: /^claude-(fable-5|mythos-5|opus-5|opus-4-8|opus-4-5|opus-4-1|sonnet-5|haiku-4-5)/,
+    effort: /^claude-(fable|mythos|opus-5|opus-4-[5-8]|sonnet-5|sonnet-4-6|haiku-5)/,
+    structured: /^claude-(fable-5|mythos-5|opus-5|opus-4-8|opus-4-5|opus-4-1|sonnet-5|haiku-5|haiku-4-5)/,
     fallbackDefault: /^claude-(fable-5-1|opus-5-5|opus-5|sonnet-5-5)$/,
   };
 
@@ -612,7 +612,7 @@
   }
   // The other models the set-up page prices, for when the live list can't be fetched (same capture date).
   const SNAPSHOT = {
-    'anthropic/claude-opus-5.5': { in: 4, out: 20 }, 'anthropic/claude-haiku-4.5': { in: 1, out: 5 }, 'openai/gpt-6-sol': { in: 2, out: 10 },
+    'anthropic/claude-opus-5.5': { in: 4, out: 20 }, 'anthropic/claude-haiku-5.5': { in: 0.1, out: 0.5 }, 'openai/gpt-6-sol': { in: 2, out: 10 },
     'google/gemini-3.5-flash-lite': { in: 0.3, out: 2.5 }, 'openai/gpt-oss-120b': { in: 0.04, out: 0.17 },
   };
   const priceFor = (id) => livePrice.get(id) || RECOMMENDED.find((m) => m.id === id)?.price || SNAPSHOT[id] || null;
